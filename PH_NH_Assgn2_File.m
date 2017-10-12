@@ -21,39 +21,22 @@ k_i       = 2;     %thermal conductivity of insulation
 k_t       = 4;     %thermal conductivity of tile
 k_air     = 0.0257; %from engineering toolbox
 hc = 19.91          %k*Nu*z (average HTC for forced convection of model)
-T_air = 290         %in KELVIN whoohooo
+T_air = 20         %in KELVIN whoohooo
 
 Bi = hc*Dx/k_air
 
-%400/.0002;
-q_wire    = 400/0.000025 
 
-%Bi %??? do we need this?
-
+q_wire    = 400/0.000025 %W m-3 
 R = int16(h/Dx);
 C = w/Dx;       
 %%
 % initialising the geometry
 
 geom = zeros(R,C);
-% model = zeros(R,C);
-
 geom(1:end,1:end) = 1;
-
-% model(5:10,1:2.5)  = 4;
-% model(40:80,1:end) = 6;   
 
 idx=find(geom==1);      %finds all the cells with 1's 
                         %(i.e. in the domain. should be all the cells in our case)
-% figure(1);imagesc(geom)
-% title('geometry')
-% colorbar
-% set(gca,'YDir','normal')
-
-% figure(2);imagesc(model)
-% title('geometry')
-% colorbar
-% set(gca,'YDir','normal')
 %%
 % Setting up Matricies
 %A = sparse(length(idx),length(idx));
@@ -316,13 +299,23 @@ Tall(idx)= T; % reshape T vector to correspond to physical positions.
 % set(gca,'YDir','normal')
 
 
-figure(3);imagesc(Tall, [-5 600]) % display result ,[5*floor(min(T(:))/5) 5*ceil(max(T(:))/5)]
+figure(3);imagesc(Tall, [-5 230]) % display result ,[5*floor(min(T(:))/5) 5*ceil(max(T(:))/5)]
 set(gca,'YDir','normal')
 c = colorbar;
 c.Label.String = 'Temperature (?C)';
 title('Temperature')
 colormap hot
 
+mirrorT = fliplr(Tall);
+newT = [mirrorT Tall];
+floor = [newT newT newT newT newT newT newT newT newT newT]; %New array for all 10 wires
+
+figure(2)
+imagesc(flipud(floor),[-5 230]) % display result
+c = colorbar;
+c.Label.String = 'Temperature (?C)';
+colormap hot
+title('Full Temperature Map of Floor Space')
             
             
             
