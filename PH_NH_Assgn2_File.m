@@ -1,4 +1,6 @@
 clear all
+%---created by Nick Huang. Special thanks to Daniel Holland for making this possible.---%
+
 %   |\\\\\\\\\\\\\\\\\\\\\\\\\\\|  
 %   |___________________________|   _
 %   |                           |   |
@@ -11,12 +13,11 @@ clear all
 %   |___________________________|   _
 %               L
 
-%%
-%setting parameters of materials
+%% --setting parameters of materials
 w = .033; %m
 h = .04; %m
-Dx = 0.0005;       %.5 mm cell width and height FINE GRIDe
-%Dx = 0.002;         %UNCOMMENT FOR COARSE GRIDE
+%Dx = 0.0005;       %.5 mm cell width and height FINE GRIDe
+Dx = 0.002;         %UNCOMMENT FOR COARSE GRIDE
 
 k_c       = 385;     %thermal conductivity of copper wire   %%%%% engr toolbox
 k_i       = 2;     %thermal conductivity of insulation
@@ -27,32 +28,27 @@ T_air = 20         %in KELVIN whoohooo
 
 Bi = hc*Dx/k_air
 
+power_supply = 400 %W
+wire_area    = .005^2*6
 
-q_wire    = 400/0.000025 %W m-3 
+q_wire    = power_supply/wire_area  %W m-3
+
 R = int16(h/Dx); %either 80 or 20
 C = w/Dx;        %either 66 or 17
-%%
-% initialising the geometry
+%% initialising the geometry
 
 geom = zeros(round(R),round(C));
 geom(1:end,1:end) = 1;
 
 idx=find(geom==1);      %finds all the cells with 1's 
                         %(i.e. in the domain. should be all the cells in our case)
-%%
-% Setting up Matricies
-%A = sparse(length(idx),length(idx));
+%% Setting up Matricies
+
 A = zeros(length(idx),length(idx));
-Adum = zeros(round(R),round(C)); % Dummy 2D matrix containing weighting at each 
-% row and cell index. Used to assign weights to correct cells in A matrix
-% when Adum is converted to a vector form it comprises one row of the A
-% matrix.
+Adum = zeros(round(R),round(C)); 
 
 b = Adum(idx); % initialise b as matrix of zeros corresponding to geometry of plate
-% figure(2);imagesc(b)
-% title('Dummy matrix')
-% colorbar
-% set(gca,'YDir','normal')
+
 if Dx == 0.0005
     for iN = 1:length(idx)
         Adum = zeros(R,C);          % Dummy 2D matrix containing weighting at each cell
@@ -90,7 +86,7 @@ if Dx == 0.0005
                 Adum(iR+1,iC)    = 1;
 
                 type(iN) = 4;
-    %         
+             
     %%%%%%%%%%%%%%%%%%_where insulation meets tile_%%%%%%%%%%%%%%%%%%%%
     %                      right and left side                        %
 
@@ -111,7 +107,7 @@ if Dx == 0.0005
                 Adum(iR-1,iC)    = k_i;
 
                 type(iN) = 24;   
-                %MAKES BOTTOM HALF MORE YELLOW
+                
             elseif iR == 40 && iC > 1 && iC < 66 %do range for bottom of tile
                 cas = 24;
                 Adum(iR,iC-1:iC+1) = [k_t -(3*k_t+k_i) k_t];
@@ -136,21 +132,25 @@ if Dx == 0.0005
                 Adum(iR,iC:iC+1) = [-(2*k_c+k_i) k_c];
                 Adum(iR+1,iC) = k_i;
                 Adum(iR-1,iC) = k_c;
-                b(iN) = -q_wire*Dx^2;  %done   
+                b(iN) = -q_wire*Dx^2; 
+                
                 type(iN) = 8;
+                
             elseif iR == 10 && iC == 5      %bottom right corner of the wire
                 cas = 9;
                 Adum(iR,iC-1:iC+1) = [k_c -(2*k_c+2*k_i) k_i];
                 Adum(iR+1,iC)    = k_c;
                 Adum(iR-1,iC)    = k_i;
-                b(iN) = -q_wire*Dx^2;  %done
+                b(iN) = -q_wire*Dx^2;  
+                
                 type(iN) = 9;
+                
             elseif iR == 20 && iC == 5      %top right corner of the wire
                 cas = 10;
                 Adum(iR,iC-1:iC+1) = [k_c -(2*k_c+2*k_i) k_i];
                 Adum(iR+1,iC)    = k_i;
                 Adum(iR-1,iC)    = k_c;
-                b(iN) = -q_wire*Dx^2;  %done
+                b(iN) = -q_wire*Dx^2;  
 
                 type(iN) = 10;
     %%%%%%%%%%%%%%%%%%_top and bottom of wire_%%%%%%%%%%%%%%%%%%%%
@@ -160,7 +160,7 @@ if Dx == 0.0005
                 Adum(iR,iC-1:iC+1) = [k_c -(3*k_c+k_i) k_c];
                 Adum(iR+1,iC)    = k_i;
                 Adum(iR-1,iC)    = k_c;
-                b(iN) = -q_wire*Dx^2;  %done
+                b(iN) = -q_wire*Dx^2;  
 
                 type(iN) = 11;
 
@@ -169,18 +169,16 @@ if Dx == 0.0005
                 Adum(iR,iC-1:iC+1) = [k_c -(3*k_c+k_i) k_c];
                 Adum(iR+1,iC)    = k_c;
                 Adum(iR-1,iC)    = k_i;
-                b(iN) = -q_wire*Dx^2;  %done    
+                b(iN) = -q_wire*Dx^2;      
 
                 type(iN) = 12;
     %%%%%%%%%%%%%%%%%%_top of model_%%%%%%%%%%%%%%%%%%%%
 
-        %RANGE PROBLEMS WITH LINE 170? %
             elseif iR == 80 && iC > 0   %do range for top of t exposed to air
                 cas = 13;
                 Adum(iR,iC-1:iC+1) = [.5 -(2+Bi) .5];
-    %             Adum(iR+1,iC)    = ;
                 Adum(iR-1,iC)    = 1;
-                b(iN) = -T_air*Bi; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                b(iN) = -T_air*Bi; 
 
                 type(iN) = 13;
 
@@ -191,7 +189,7 @@ if Dx == 0.0005
                 Adum(iR,iC-1:iC+1) = [1 -(4) 1];
                 Adum(iR+1,iC)    = 1;
                 Adum(iR-1,iC)    = 1;
-                b(iN) = -q_wire*Dx^2/k_c;  %done
+                b(iN) = -q_wire*Dx^2/k_c;  
 
                 type(iN) = 14;
 
@@ -205,16 +203,13 @@ if Dx == 0.0005
     % 
     % %%%%%%%%%%%%%%%%%%_bottom of insulation_%%%%%%%%%%%%%%%%%%%%
 
-
-        %%%%%%  breaks it ???????????  %%%%%%%%%%%%%%%%%%
-
-
             elseif iR < 2 && iC > 1 && iC < 66 %do range for all bottom of the insulation            
                 cas = 17;
                 Adum(iR,iC-1:iC+1)  = [1 -(3) 1];
                 Adum(iR+1,iC)       = 1;
 
                 type(iN) = 17;
+                
     %%%%%%%%%%%%%%%%%%%%%_left walls_%%%%%%%%%%%%%%%%%%%%%%%
 
             elseif (iR > 1 && iR < 10 && iC < 2) | (iR > 20 && iR < 40 && iC < 2)  %do range for all left walls of insulation
@@ -241,7 +236,7 @@ if Dx == 0.0005
                 b(iN) = -q_wire*Dx^2/k_c;
                 type(iN) = 20;
     %%%%%%%%%%%%%%%%%%%%%_right walls_%%%%%%%%%%%%%%%%%%%%%%%
-    % 
+   
             elseif iR > 1 && iR < 40 && iC > 65 %do range for all right walls of insulation
                 cas = 21;
                 Adum(iR,iC-1:iC) = [1 -3];
@@ -265,7 +260,7 @@ if Dx == 0.0005
                 type(iN) = 23;
 
 
-            else%range for all interior insulation cells 
+            else    %range for all interior insulation cells 
 
                 cas = 15;
                 Adum(iR,iC-1:iC+1) = [1 -(4) 1];
@@ -274,14 +269,13 @@ if Dx == 0.0005
                 type(iN) = 15;
 
             end
-            %         figure(2);imagesc(Adum) % These commands can be helpful to debug.
-    %         set(gca,'YDir','normal')
-
             A(iN,:)=Adum(idx); % convert Adum to vector and place as row in A matrix
     end
     
-%%%%%%%%%%%%%%%%%%%%%%%%goes through the calculations for a COARSE GRID%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%                                               %%%%%%%%%%%%%%%%%%%%%%%
+    
+    
+%%%%%%%%%%%%%%%%%%%%%%%%--goes through the calculations for a COARSE GRID--%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%                                               %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 else 
         for iN = 1:length(idx)
@@ -341,7 +335,7 @@ else
                 Adum(iR-1,iC)    = k_i;
 
                 type(iN) = 24;   
-                %MAKES BOTTOM HALF MORE YELLOW
+                
             elseif iR == 10 && iC > 1 && iC < 17 %do range for bottom of tile
                 cas = 24;
                 Adum(iR,iC-1:iC+1) = [k_t -(3*k_t+k_i) k_t];
@@ -366,22 +360,24 @@ else
                 Adum(iR,iC:iC+1) = [-(2*k_c+k_i) k_c];
                 Adum(iR+1,iC) = k_i;
                 Adum(iR-1,iC) = k_c;
-                b(iN) = -q_wire*Dx^2;  %done   
+                b(iN) = -q_wire*Dx^2;  
+                
                 type(iN) = 8;
             elseif iR == 3 && iC == 2      %bottom right corner of the wire %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 cas = 9;
                 Adum(iR,iC-1:iC+1) = [k_c -(2*k_c+2*k_i) k_i];
                 Adum(iR+1,iC)    = k_c;
                 Adum(iR-1,iC)    = k_i;
-                b(iN) = -q_wire*Dx^2;  %done
+                b(iN) = -q_wire*Dx^2;  
+                
                 type(iN) = 9;
             elseif iR == 5 && iC == 2      %top right corner of the wire
                 cas = 10;
                 Adum(iR,iC-1:iC+1) = [k_c -(2*k_c+2*k_i) k_i];
                 Adum(iR+1,iC)    = k_i;
                 Adum(iR-1,iC)    = k_c;
-                b(iN) = -q_wire*Dx^2;  %done
-
+                b(iN) = -q_wire*Dx^2;  
+                
                 type(iN) = 10;
     %%%%%%%%%%%%%%%%%%_top and bottom of wire_%%%%%%%%%%%%%%%%%%%%
 
@@ -390,7 +386,7 @@ else
                 Adum(iR,iC-1:iC+1) = [k_c -(3*k_c+k_i) k_c];
                 Adum(iR+1,iC)    = k_i;
                 Adum(iR-1,iC)    = k_c;
-                b(iN) = -q_wire*Dx^2;  %done
+                b(iN) = -q_wire*Dx^2;  
 
                 type(iN) = 11;
 
@@ -399,7 +395,7 @@ else
                 Adum(iR,iC-1:iC+1) = [k_c -(3*k_c+k_i) k_c];
                 Adum(iR+1,iC)    = k_c;
                 Adum(iR-1,iC)    = k_i;
-                b(iN) = -q_wire*Dx^2;  %done    
+                b(iN) = -q_wire*Dx^2;      
 
                 type(iN) = 12;
     %%%%%%%%%%%%%%%%%%_top of model_%%%%%%%%%%%%%%%%%%%%
@@ -419,7 +415,7 @@ else
                 Adum(iR,iC-1:iC+1) = [1 -(4) 1];
                 Adum(iR+1,iC)    = 1;
                 Adum(iR-1,iC)    = 1;
-                b(iN) = -q_wire*Dx^2/k_c;  %done
+                b(iN) = -q_wire*Dx^2/k_c;  
 
                 type(iN) = 14;
 
@@ -430,7 +426,7 @@ else
                 Adum(iR-1,iC)    = 1;
 
                 type(iN) = 16;
-    % 
+    
     % %%%%%%%%%%%%%%%%%%_bottom of insulation_%%%%%%%%%%%%%%%%%%%%
 
 
@@ -467,6 +463,7 @@ else
                 Adum(iR+1,iC)    = 1;
                 Adum(iR-1,iC)    = 1;
                 b(iN) = -q_wire*Dx^2/k_c;
+                
                 type(iN) = 20;
     %%%%%%%%%%%%%%%%%%%%%_right walls_%%%%%%%%%%%%%%%%%%%%%%%
     % 
@@ -493,7 +490,7 @@ else
                 type(iN) = 23;
 
 
-            else%range for all interior insulation cells 
+            else    %range for all interior insulation cells 
 
                 cas = 15;
                 Adum(iR,iC-1:iC+1) = [1 -(4) 1];
@@ -502,9 +499,7 @@ else
                 type(iN) = 15;
 
             end
-            %         figure(2);imagesc(Adum) % These commands can be helpful to debug.
-    %         set(gca,'YDir','normal')
-
+        
             A(iN,:)=Adum(idx); % convert Adum to vector and place as row in A matrix
         end
         
@@ -514,7 +509,7 @@ end
 b = b(:);
 
 tic
-T = A\b; % solves system of equations. Produces temperature as a vector T
+T = A\b; 
 toc
 Tall=zeros(round(R),round(C));
 Tall(idx)= T; % reshape T vector to correspond to physical positions.
@@ -533,7 +528,7 @@ Tall(idx)= T; % reshape T vector to correspond to physical positions.
 % set(gca,'YDir','normal')
 
 
-figure(3);imagesc(Tall, [-5 250]) % display result ,[5*floor(min(T(:))/5) 5*ceil(max(T(:))/5)]
+figure(1);imagesc(Tall, [-5 70]) % display result ,[5*floor(min(T(:))/5) 5*ceil(max(T(:))/5)]
 set(gca,'YDir','normal')
 c = colorbar;
 c.Label.String = 'Temperature (C)';
@@ -545,7 +540,7 @@ newT = [mirrorT Tall];
 floor = [newT newT newT newT newT newT newT newT newT newT]; %New array for all 10 wires
 
 figure(2)
-imagesc(flipud(floor),[-5 250]) % display result
+imagesc(flipud(floor),[-5 70]) % display result
 c = colorbar;
 c.Label.String = 'Temperature (C)';
 colormap hot
