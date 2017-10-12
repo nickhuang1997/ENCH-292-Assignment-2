@@ -20,7 +20,8 @@ k_c       = 385;     %thermal conductivity of copper wire   %%%%% engr toolbox
 k_i       = 2;     %thermal conductivity of insulation
 k_t       = 4;     %thermal conductivity of tile
 k_air     = 0.0257; %from engineering toolbox
-hc = 19.91          %k*Nu*z (average 
+hc = 19.91          %k*Nu*z (average HTC for forced convection of model)
+T_air = 290         %in KELVIN whoohooo
 
 Bi = hc*Dx/k_air
 
@@ -84,7 +85,7 @@ for iN = 1:length(idx)
 
         elseif iR == 80 && iC == 1      %top left of model - exposed to air 
             cas = 2;
-            Adum(iR,iC:iC+1) = [-(2*k_t+k_air) k_t];
+            Adum(iR,iC:iC+1) = [-(1 + Bi) ];
             %Adum(iR+1,iC) = k_air;
             Adum(iR-1,iC) = k_t;
         
@@ -191,10 +192,10 @@ for iN = 1:length(idx)
     %RANGE PROBLEMS WITH LINE 170? %
         elseif iR == 80 && iC > 0   %do range for top of t exposed to air
             cas = 13;
-            Adum(iR,iC-1:iC+1) = [k_t -(3*k_t+k_air) k_t];
-            %Adum(iR+1,iC)    = k_air;
-            Adum(iR-1,iC)    = k_t;
-            b(iN) = -1; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            Adum(iR,iC-1:iC+1) = [.5 -(2+Bi) .5];
+%             Adum(iR+1,iC)    = ;
+            Adum(iR-1,iC)    = 1;
+            b(iN) = -T_air*Bi; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             type(iN) = 13;
             

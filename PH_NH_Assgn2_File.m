@@ -85,18 +85,17 @@ for iN = 1:length(idx)
 
         elseif iR == 80 && iC == 1      %top left of model - exposed to air 
             cas = 2;
-            Adum(iR,iC:iC+1) = [-(2*k_t+k_air) k_t];
-            %Adum(iR+1,iC) = k_air;
-            Adum(iR-1,iC) = k_t;
-        
+            Adum(iR,iC:iC+1) = [-(1 + Bi) .5];
+            Adum(iR-1,iC) = .5;
+            b(iN) = -Bi*T_air
             type(iN) = 2;
             
         elseif iR == 80 && iC == 66      %top right of model
             cas = 3;
-            Adum(iR,iC-1:iC) = [k_t -(2*k_t+k_air)];
-            %Adum(iR+1,iC) = k_air;
-            Adum(iR-1,iC) = k_t;
-           
+            Adum(iR,iC-1:iC) = [.5 -(1 + Bi)];
+            Adum(iR-1,iC) = .5;
+            b(iN) = -Bi*T_air;
+            
             type(iN) = 3;
             
         elseif iR == 1 && iC == 66      %bottom right of model
