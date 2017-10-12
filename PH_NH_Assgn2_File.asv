@@ -34,7 +34,7 @@ C = w/Dx;        %either 66 or 17
 %%
 % initialising the geometry
 
-geom = zeros(round(R),round(C));
+geom = zeros(R,C);
 geom(1:end,1:end) = 1;
 
 idx=find(geom==1);      %finds all the cells with 1's 
@@ -43,7 +43,7 @@ idx=find(geom==1);      %finds all the cells with 1's
 % Setting up Matricies
 %A = sparse(length(idx),length(idx));
 A = zeros(length(idx),length(idx));
-Adum = zeros(round(R),round(C)); % Dummy 2D matrix containing weighting at each 
+Adum = zeros(R,C); % Dummy 2D matrix containing weighting at each 
 % row and cell index. Used to assign weights to correct cells in A matrix
 % when Adum is converted to a vector form it comprises one row of the A
 % matrix.
@@ -285,7 +285,7 @@ if Dx == 0.0005
 
 else 
         for iN = 1:length(idx)
-        Adum = zeros(round(R),round(C));          % Dummy 2D matrix containing weighting at each cell
+        Adum = zeros(R,C);          % Dummy 2D matrix containing weighting at each cell
         Adum(idx(iN)) = 2;          % set current entry to a value of 2
         [iR, iC]=find(Adum==2);     % find locations of the entry identified on above row
 
@@ -404,9 +404,11 @@ else
                 type(iN) = 12;
     %%%%%%%%%%%%%%%%%%_top of model_%%%%%%%%%%%%%%%%%%%%
 
+        %RANGE PROBLEMS WITH LINE 170? %
             elseif iR == 20 && iC > 0   %do range for top of t exposed to air
                 cas = 13;
-                Adum(iR,iC:iC+1) = [-(2+Bi) .5]; %Adum(iR,iC-1:iC+1) = [.5 -(2+Bi) .5];
+                Adum(iR,iC-1:iC+1) = [.5 -(2+Bi) .5];
+    %             Adum(iR+1,iC)    = ;
                 Adum(iR-1,iC)    = 1;
                 b(iN) = -T_air*Bi; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -477,14 +479,14 @@ else
                 Adum(iR-1,iC)    = 1;
                 type(iN) = 21;
 
-            elseif iR > 9 && iR < 10 && iC > 16%do range for all right walls of tile
+            elseif iR > 19 && iR < 40 && iC > 32%do range for all right walls of tile
                 cas = 22;
                 Adum(iR,iC-1:iC) = [1 -3];
                 Adum(iR+1,iC)    = 1;
                 Adum(iR-1,iC)    = 1;
                 type(iN) = 22;
 
-            elseif iR < 5 && iR > 3 && iC == 2 %do range for all right walls of copper
+            elseif iR < 10 && iR > 5 && iC == 3 %do range for all right walls of copper
                 cas = 23;
                 Adum(iR,iC-1:iC) = [1 -3];
                 Adum(iR+1,iC)    = 1;
@@ -516,7 +518,7 @@ b = b(:);
 tic
 T = A\b; % solves system of equations. Produces temperature as a vector T
 toc
-Tall=zeros(round(R),round(C));
+Tall=zeros(R,C);
 Tall(idx)= T; % reshape T vector to correspond to physical positions.
 
 
@@ -536,7 +538,7 @@ Tall(idx)= T; % reshape T vector to correspond to physical positions.
 figure(3);imagesc(Tall, [-5 250]) % display result ,[5*floor(min(T(:))/5) 5*ceil(max(T(:))/5)]
 set(gca,'YDir','normal')
 c = colorbar;
-c.Label.String = 'Temperature (C)';
+c.Label.String = 'Temperature (?C)';
 title('Temperature')
 colormap hot
 
@@ -547,7 +549,7 @@ floor = [newT newT newT newT newT newT newT newT newT newT]; %New array for all 
 figure(2)
 imagesc(flipud(floor),[-5 250]) % display result
 c = colorbar;
-c.Label.String = 'Temperature (C)';
+c.Label.String = 'Temperature (?C)';
 colormap hot
 title('Full Temperature Map of Floor Space')
             
