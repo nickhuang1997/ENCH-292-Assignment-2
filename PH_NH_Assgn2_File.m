@@ -82,7 +82,7 @@ for iN = 1:length(idx)
         elseif iR == 80 && iC == 1      %top left of model - exposed to air 
             cas = 2;
             Adum(iR,iC:iC+1) = [-(2*k_t+k_air) k_t];
-            Adum(iR+1,iC) = k_air;
+            %Adum(iR+1,iC) = k_air;
             Adum(iR-1,iC) = k_t;
         
             type(iN) = 2;
@@ -90,7 +90,7 @@ for iN = 1:length(idx)
         elseif iR == 80 && iC == 66      %top right of model
             cas = 3;
             Adum(iR,iC-1:iC) = [k_t -(2*k_t+k_air)];
-            Adum(iR+1,iC) = k_air;
+            %Adum(iR+1,iC) = k_air;
             Adum(iR-1,iC) = k_t;
            
             type(iN) = 3;
@@ -162,6 +162,7 @@ for iN = 1:length(idx)
             Adum(iR+1,iC)    = k_i;
             Adum(iR-1,iC)    = k_c;
             b(iN) = -q_wire*Dx^2;  %done
+            
             type(iN) = 10;
 %%%%%%%%%%%%%%%%%%_top and bottom of wire_%%%%%%%%%%%%%%%%%%%%
         
@@ -185,8 +186,9 @@ for iN = 1:length(idx)
         elseif iR == 80 && iC > 0   %do range for top of t exposed to air
             cas = 13;
             Adum(iR,iC-1:iC+1) = [k_t -(3*k_t+k_air) k_t];
-            Adum(iR+1,iC)    = k_air;
+            %Adum(iR+1,iC)    = k_air;
             Adum(iR-1,iC)    = k_t;
+            b(iN) = -1;
             type(iN) = 13;
 %%%%%%%%%%%%%%%%%%_interior cells_%%%%%%%%%%%%%%%%%%%%
             
@@ -195,7 +197,7 @@ for iN = 1:length(idx)
             Adum(iR,iC-1:iC+1) = [1 -(4) 1];
             Adum(iR+1,iC)    = 1;
             Adum(iR-1,iC)    = 1;
-            %b(iN) = -q_wire*Dx^2/k_c;  %done
+            b(iN) = -q_wire*Dx^2/k_c;  %done
             
             type(iN) = 14;
         
@@ -214,9 +216,9 @@ for iN = 1:length(idx)
     
         elseif iR < 2 && iC > 1 && iC < 66 %do range for all bottom of the insulation            
             cas = 17;
-            %Adum(iR,iC-1:iC+1)  = [k_i -(3*k_i) k_i];
+            Adum(iR,iC-1:iC+1)  = [k_i -(3*k_i) k_i];
             Adum(iR+1,iC)       = k_i;
-            b(iN)               = -q_wire*Dx^2;  %done
+            
             type(iN) = 17;
 %%%%%%%%%%%%%%%%%%%%%_left walls_%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -296,14 +298,14 @@ Tall(idx)= T; % reshape T vector to correspond to physical positions.
 % title('geometry')
 % colorbar
 % set(gca,'YDir','normal')
-
-geo = reshape(type,iR,iC);
-figure(420)
-imagesc(geo)
-set(gca,'YDir','normal')
+% 
+% geo = reshape(type,iR,iC);
+% figure(420)
+% imagesc(geo)
+% set(gca,'YDir','normal')
 
 Tall(Tall==0)=15;
-figure(3);imagesc(Tall, [-50 20]) % display result ,[5*floor(min(T(:))/5) 5*ceil(max(T(:))/5)]
+figure(3);imagesc(Tall, [-10 40]) % display result ,[5*floor(min(T(:))/5) 5*ceil(max(T(:))/5)]
 set(gca,'YDir','normal')
 c = colorbar;
 c.Label.String = 'Temperature (?C)';
