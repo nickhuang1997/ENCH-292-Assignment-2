@@ -107,7 +107,7 @@ for iN = 1:length(idx)
         
        
 
-        elseif iR == 40 && iC == 66      %left side insulation meets tile
+        elseif iR == 40 && iC == 66      %right side insulation meets tile
             cas = 6;
             Adum(iR,iC-1:iC) = [k_t -(2*k_t+k_i)];
             Adum(iR+1,iC)    = k_t;
@@ -115,6 +115,13 @@ for iN = 1:length(idx)
 
             type(iN) = 5;
             
+        elseif iR == 40 && iC == 1      %right side insulation meets tile
+            cas = 6;
+            Adum(iR,iC:iC+1) = [-(2*k_t+k_i) k_t];
+            Adum(iR+1,iC)    = k_t;
+            Adum(iR-1,iC)    = k_i;
+
+            type(iN) = 24;   
             %MAKES BOTTOM HALF MORE YELLOW
         elseif iR == 40 && iC > 1 && iC < 66 %do range for bottom of tile
             cas = 24;
@@ -137,7 +144,7 @@ for iN = 1:length(idx)
             
         elseif iR == 20 && iC == 1      %top left of wire
             cas = 8;
-            Adum(iR,iC:iC+1) = [-(2*k_c+k_i) k_c]
+            Adum(iR,iC:iC+1) = [-(2*k_c+k_i) k_c];
             Adum(iR+1,iC) = k_i;
             Adum(iR-1,iC) = k_c;
             b(iN) = -q_wire*Dx^2;  %done   
@@ -183,24 +190,18 @@ for iN = 1:length(idx)
             type(iN) = 13;
 %%%%%%%%%%%%%%%%%%_interior cells_%%%%%%%%%%%%%%%%%%%%
             
-        elseif iR > 10 && iR < 20 && iC < 6 && iC > 1 %range for all interior wire cells 
+        elseif iR > 10 && iR < 20 && iC < 5 && iC > 1 %range for all interior wire cells 
             cas = 14;
-            Adum(iR,iC-1:iC+1) = [1 -(3) 1];
+            Adum(iR,iC-1:iC+1) = [1 -(4) 1];
             Adum(iR+1,iC)    = 1;
             Adum(iR-1,iC)    = 1;
-            b(iN) = -q_wire*Dx^2/k_c;  %done
-            type(iN) = 14;
-        elseif iR > 1 && iR < 38 && iC < 65 && iC > 1%range for all interior insulation cells 
+            %b(iN) = -q_wire*Dx^2/k_c;  %done
             
-            cas = 15;
-            Adum(iR,iC-1:iC+1) = [1 -(3) 1];
-            Adum(iR+1,iC)    = 1;
-            Adum(iR-1,iC)    = 1;
-            type(iN) = 15;
+            type(iN) = 14;
         
         elseif  iR > 39 && iC > 1 && iC < 66 %range for all interior tile cells 
             cas = 16;
-            Adum(iR,iC-1:iC+1) = [1 -(3) 1];
+            Adum(iR,iC-1:iC+1) = [1 -(4) 1];
             Adum(iR+1,iC)    = 1;
             Adum(iR-1,iC)    = 1;
             type(iN) = 16;
@@ -211,7 +212,7 @@ for iN = 1:length(idx)
     %%%%%%  breaks it ???????????  %%%%%%%%%%%%%%%%%%
 
     
-            elseif iR < 2 && iC > 1 && iC < 66 %do range for all bottom of the insulation            
+        elseif iR < 2 && iC > 1 && iC < 66 %do range for all bottom of the insulation            
             cas = 17;
             %Adum(iR,iC-1:iC+1)  = [k_i -(3*k_i) k_i];
             Adum(iR+1,iC)       = k_i;
@@ -219,7 +220,7 @@ for iN = 1:length(idx)
             type(iN) = 17;
 %%%%%%%%%%%%%%%%%%%%%_left walls_%%%%%%%%%%%%%%%%%%%%%%%
 
-        elseif (iR > 0 && iR < 9 && iC < 2) | (iR > 21 && iR < 39 && iC < 2)  %do range for all left walls of insulation
+        elseif (iR > 1 && iR < 10 && iC < 2) | (iR > 20 && iR < 40 && iC < 2)  %do range for all left walls of insulation
             cas = 18;
             Adum(iR,iC:iC+1) = [-3 k_i];
             Adum(iR+1,iC)    = k_i;
@@ -233,12 +234,12 @@ for iN = 1:length(idx)
             Adum(iR-1,iC)    = k_t;
             type(iN) = 19;
             
-        elseif iR > 9 && iR < 11 && iC < 2%do range for all left walls of copper
+        elseif iR > 10 && iR < 20 && iC < 2%do range for all left walls of copper
             cas = 20;
             Adum(iR,iC:iC+1) = [-3 k_c];
             Adum(iR+1,iC)    = k_c;
             Adum(iR-1,iC)    = k_c;
-            b(iN) = -q_wire*Dx^2;
+            %b(iN) = -q_wire*Dx^2;
             type(iN) = 20;
 %%%%%%%%%%%%%%%%%%%%%_right walls_%%%%%%%%%%%%%%%%%%%%%%%
 % 
@@ -256,14 +257,23 @@ for iN = 1:length(idx)
             Adum(iR-1,iC)    = k_t;
             type(iN) = 22;
             
-        elseif iR > 9 && iR < 11 && iC < 7 && iC > 5 %do range for all right walls of copper
+        elseif iR < 20 && iR > 9 && iC == 5 %do range for all right walls of copper
             cas = 23;
             Adum(iR,iC-1:iC) = [k_c -3];
             Adum(iR+1,iC)    = k_c;
             Adum(iR-1,iC)    = k_c;
             b(iN) = -q_wire*Dx^2;
             type(iN) = 23;
+        
             
+        else%range for all interior insulation cells 
+            
+            cas = 15;
+            Adum(iR,iC-1:iC+1) = [1 -(4) 1];
+            Adum(iR+1,iC)    = 1;
+            Adum(iR-1,iC)    = 1;
+            type(iN) = 15;
+        
         end
         %         figure(2);imagesc(Adum) % These commands can be helpful to debug.
 %         set(gca,'YDir','normal')
